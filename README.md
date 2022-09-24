@@ -36,3 +36,8 @@ To reproduce this result, you should run `python3 main.py sample3.mp4` in the ro
 * Optimize parameters for finding and matching key points
 * Optimize architecture and algorithms to make it faster
 * Add exceptions handling to make it robust
+
+## Contacts
+
+If you have any questions, feel free to contact me via email: `mixoz3101@gmail.com`
+or Telegram: `@mix0z`
