@@ -10,6 +10,9 @@ from utils.torch_utils import select_device
 
 
 class Yolov7BoxHandler:
+    """
+    This class handles all logic for Yolov7 model for people detection
+    """
     def __init__(self, weights="yolov7.pt", imgsz=640, conf_thres=0.25, iou_thres=0.45, agnostic_nms=True, augment=True,
                  device=""):
         self.weights = weights
@@ -20,7 +23,12 @@ class Yolov7BoxHandler:
         self.augment = augment
         self.device = device
 
-    def detect(self, source):
+    def detect(self, source: str) -> list:
+        """
+        Detects people in images located in source folder
+        :param source: folder with images
+        :return: list of lists of boxes for each image
+        """
         with torch.no_grad():
             # Initialize
             device = select_device(self.device)
@@ -32,13 +40,7 @@ class Yolov7BoxHandler:
 
             dataset = LoadImages(source, img_size=imgsz, stride=stride)
 
-            # Run inference
-            if device.type != 'cpu':
-                model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
-            old_img_w = old_img_h = imgsz
-            old_img_b = 1
-
-            answer = []
+            answer_persons = []
 
             for path, img, im0s, vid_cap in dataset:
                 img = torch.from_numpy(img).to(device)
@@ -47,23 +49,15 @@ class Yolov7BoxHandler:
                 if img.ndimension() == 3:
                     img = img.unsqueeze(0)
 
-                # Warmup
-                if device.type != 'cpu' and (
-                        old_img_b != img.shape[0] or old_img_h != img.shape[2] or old_img_w != img.shape[3]):
-                    old_img_b = img.shape[0]
-                    old_img_h = img.shape[2]
-                    old_img_w = img.shape[3]
-                    for i in range(3):
-                        model(img, augment=self.augment)[0]
-
                 # Inference
                 pred = model(img, augment=self.augment)[0]
 
                 # Apply NMS
-                pred = non_max_suppression(pred, self.conf_thres, self.iou_thres, classes=0, agnostic=self.agnostic_nms)
+                pred = non_max_suppression(pred, self.conf_thres, self.iou_thres, classes=0,
+                                           agnostic=self.agnostic_nms)
 
                 # Process detections
-                tmp_answer = []
+                tmp_answer_persons = []
                 for i, det in enumerate(pred):  # detections per image
                     if len(det):
                         # Rescale boxes from img_size to im0 size
@@ -71,7 +65,8 @@ class Yolov7BoxHandler:
 
                         # Write results
                         for *xyxy, conf, cls in reversed(det):
-                            tmp_answer.append(xyxy)
-                answer.append(tmp_answer)
+                            if cls == 0:
+                                tmp_answer_persons.append(xyxy)
+                answer_persons.append(tmp_answer_persons)
 
-            return answer
+            return answer_persons

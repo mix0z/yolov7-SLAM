@@ -1,39 +1,19 @@
 import cv2
 import numpy as np
 
-#
-# def get_keypoints(path):
-#     img = cv2.imread(path)
-#     sift = cv2.SIFT()
-#     kp1, des1 = sift.detectAndCompute(img, None)
-#     return kp1, des1
-#
-#
-# def get_matches(path1, path2):
-#     kp1, des1 = get_keypoints(path1)
-#     kp2, des2 = get_keypoints(path2)
-#     bf = cv2.BFMatcher()
-#     matches = bf.knnMatch(des1, des2, k=2)
-#     good = []
-#     for m, n in matches:
-#         if m.distance < 0.75 * n.distance:
-#             good.append([m])
-#     return good, kp1, kp2
-#
-#
-# def get_homography_matrix(path1, path2, boxes1, boxes2):
-#     good, kp1, kp2 = get_matches(path1, path2)
-#     if len(good) > 4:
-#         src_pts = np.float32([kp1[m[0].queryIdx].pt for m in good]).reshape(-1, 1, 2)
-#         dst_pts = np.float32([kp2[m[0].trainIdx].pt for m in good]).reshape(-1, 1, 2)
-#         M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-#         return M
-#     else:
-#         return None
 from draw import drawBoxes
 
 
-def get_homography_matrix(path1, path2, boxes1, boxes2):
+def get_homography_matrix(path1: str, path2: str, boxes1, boxes2, is_draw=False) -> np.ndarray:
+    """
+    Calculates homography matrix for two images
+    :param path1: path to first image
+    :param path2: path to second image
+    :param boxes1: list of boxes in first image
+    :param boxes2: list of boxes in second image
+    :param is_draw: if True, draws the boxes on the images
+    :return: homography matrix
+    """
     im1 = cv2.imread(path1)
     im2 = cv2.imread(path2)
     # Convert images to grayscale
@@ -41,7 +21,7 @@ def get_homography_matrix(path1, path2, boxes1, boxes2):
     im2_gray = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
 
     # Detect ORB features and compute descriptors.
-    orb = cv2.ORB_create(30000)
+    orb = cv2.ORB_create(3000)
     keypoints1, descriptors1 = orb.detectAndCompute(im1_gray, None)
     keypoints2, descriptors2 = orb.detectAndCompute(im2_gray, None)
 
@@ -50,8 +30,10 @@ def get_homography_matrix(path1, path2, boxes1, boxes2):
     matches = list(matcher.match(descriptors1, descriptors2, None))
 
     # Draw matches
-    im_matches = cv2.drawMatches(im1, keypoints1, im2, keypoints2, matches, None)
-    cv2.imwrite("matches_example/matches.jpg", im_matches)
+    if is_draw:
+        im_matches = cv2.drawMatches(im1, keypoints1, im2, keypoints2, matches, None)
+        drawBoxes(boxes1, im_matches)
+        cv2.imwrite("matches_example/matches.jpg", im_matches)
 
     # Extract location of matches
     points1 = np.zeros((len(matches), 2), dtype=np.float32)
@@ -92,9 +74,10 @@ def get_homography_matrix(path1, path2, boxes1, boxes2):
         good_points2[i, :] = keypoints2[match.trainIdx].pt
 
     # Draw top matches
-    im_matches = cv2.drawMatches(im1, keypoints1, im2, keypoints2, good_matches, None)
-    drawBoxes(boxes1, im_matches)
-    cv2.imwrite("matches_example/matches_after_boxes.jpg", im_matches)
+    if is_draw:
+        im_matches = cv2.drawMatches(im1, keypoints1, im2, keypoints2, good_matches, None)
+        drawBoxes(boxes1, im_matches)
+        cv2.imwrite("matches_example/matches_after_boxes.jpg", im_matches)
 
     # Find homography
     M, mask = cv2.findHomography(good_points1, good_points2, cv2.RANSAC, 5.0)
