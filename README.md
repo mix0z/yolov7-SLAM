@@ -30,9 +30,18 @@ The result of processing this video is in `processed_videos` folder.
 And also example of filtered matches in `matches_example` folder.
 To reproduce this result, you should run `python3 main.py sample3.mp4` in the root of the repository.
 
+* All matches
+
 ![All matches](https://github.com/mix0z/yolov7-SLAM/blob/main/matches_example/matches.jpg)
-![Matches Filtered by YOLOV7 person boxes](https://github.com/mix0z/yolov7-SLAM/blob/main/matches_example/matches_after_boxes.jpg)
+
+* Matches filtered by YOLOV7 person boxes
+
+![Matches filtered by YOLOV7 person boxes](https://github.com/mix0z/yolov7-SLAM/blob/main/matches_example/matches_after_boxes.jpg)
+
+* Video example with points which illustrate camera movements
+
 ![Video example with points which illustrate camera movements](https://github.com/mix0z/yolov7-SLAM/blob/main/example.png)
+
 ## Future work
 
 * Collect dataset with relevant videos
